@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 namespace RadioTools
 {
@@ -9,19 +8,18 @@ namespace RadioTools
         {
             RuntimeHelpers.RunClassConstructor(typeof(Settings).TypeHandle);
             RuntimeHelpers.RunClassConstructor(typeof(Logger).TypeHandle);
-
-            List<ConnectionDetails> connections = new List<ConnectionDetails>();
-            
-            connections = NetworkTools.Scan();
             
             // Save the ones that are alive, when rescanning, I can check if those hostnames are alive
             // and if notm I can print which connections were lost!
-            
-            Serializer.SaveJSON(connections, "connections");
 
-            NetworkTools.SetURLs(connections);
+            Commands.Parse(args);
 
             Logger.Finish();
+        }
+
+        private static void DisableOutput()
+        {
+            System.Console.SetOut(System.IO.TextWriter.Null);
         }
     }
 }
