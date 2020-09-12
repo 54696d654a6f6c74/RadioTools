@@ -2,16 +2,27 @@ using System.Net;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 
-
 namespace RadioTools
 {
     public class ConnectionDetails
     {
-        public IPAddress IP {get; private set;}
-        public string hostname {get; private set;}
-        public bool alive {get; private set;}
+
+        // Check Settings.cs line 14 for the reason
+        // why these have public setters. I swear, 
+        // I'm never doing JSON serializatio nagain....
+
+        public IPAddress IP {get; set;}
+        public string hostname {get; set;}
+        public bool alive {get; set;}
 
         public ConnectionDetails() {}
+
+        public ConnectionDetails(IPAddress _ip, string _hostname, bool _alive)
+        {
+            IP = _ip;
+            hostname = _hostname;
+            alive = _alive;
+        }
 
         public ConnectionDetails(IPAddress ip)
         {
@@ -36,6 +47,5 @@ namespace RadioTools
         {
             return IPAddress.Parse((string)reader.GetString());
         }
-        
     }
 }

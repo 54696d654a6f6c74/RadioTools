@@ -16,10 +16,5 @@ namespace RadioTools
 
             Logger.Finish();
         }
-
-        private static void DisableOutput()
-        {
-            System.Console.SetOut(System.IO.TextWriter.Null);
-        }
     }
 }
