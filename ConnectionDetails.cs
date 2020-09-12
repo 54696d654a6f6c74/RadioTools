@@ -1,12 +1,12 @@
 using System.Net;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using System;
 
 namespace RadioTools
 {
-    public class ConnectionDetails
+    public class ConnectionDetails : IEquatable<ConnectionDetails>
     {
-
         // Check Settings.cs line 14 for the reason
         // why these have public setters. I swear, 
         // I'm never doing JSON serializatio nagain....
@@ -33,6 +33,15 @@ namespace RadioTools
                 Logger.Println("Device found at: " + ip.ToString());
                 hostname = NetworkTools.GetHostName(IP);
             }
+        }
+
+        public bool Equals(ConnectionDetails other)
+        {
+            if(hostname != null)
+                return hostname == other.hostname;
+            Logger.Println("Warning, comparing based on IP!");
+            Logger.Println("Returning " + (IP == other.IP).ToString());
+            return IP == other.IP;
         }
     }
 
