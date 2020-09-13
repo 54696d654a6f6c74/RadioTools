@@ -93,43 +93,68 @@ namespace RadioTools
 
             void SetURL(IPAddress ip)
             {
-                try{
-                    TcpClient tcpclnt = new TcpClient();
+                SendCommand(ip, "SETURL", Settings.dat.URL);
+            }
+        }
 
-                    tcpclnt.Connect(ip, 1999);
+        public static void SetVolume(List<ConnectionDetails> targets)
+        {
+            Thread[] threads = new Thread[targets.Count];
 
-                    string str = "mgradio_client\n";
-                    Stream stm = tcpclnt.GetStream();
-                    ASCIIEncoding asen = new ASCIIEncoding();
+            for(int i = 0; i < targets.Count; i++)
+            {
+                int temp = i;
+                threads[temp] = new Thread(() => SetVol(targets[temp].IP));
+                threads[temp].Start();
+            }
+            
+            foreach(Thread t in threads)
+                t.Join();
 
-                    byte[] bb = new byte[100];
-                    int k = stm.Read(bb, 0, 100);
+            void SetVol(IPAddress ip)
+            {
+                SendCommand(ip, "SETVOLUME", Settings.dat.volume.ToString());
+            }
+        }
 
-                    for (int i = 0; i < k; i++)
-                        Console.Write(Convert.ToChar(bb[i]));
+        private static void SendCommand(IPAddress ip, string command, string value)
+        {
+            try{
+                TcpClient tcpclnt = new TcpClient();
+
+                tcpclnt.Connect(ip, 1999);
+
+                string str = "mgradio_client\n";
+                Stream stm = tcpclnt.GetStream();
+                ASCIIEncoding asen = new ASCIIEncoding();
+
+                byte[] bb = new byte[100];
+                int k = stm.Read(bb, 0, 100);
+
+                for (int i = 0; i < k; i++)
+                    Console.Write(Convert.ToChar(bb[i]));
 
 
-                    byte[] ba = asen.GetBytes(str);
-                    stm.Write(ba, 0, ba.Length);
+                byte[] ba = asen.GetBytes(str);
+                stm.Write(ba, 0, ba.Length);
 
-                    byte[] ba1 = asen.GetBytes("SETURL\n");
-                    stm.Write(ba1, 0, ba1.Length);
+                byte[] ba1 = asen.GetBytes(command + "\n");
+                stm.Write(ba1, 0, ba1.Length);
 
-                    byte[] ba2 = asen.GetBytes(Settings.dat.URL + "\n");
-                    stm.Write(ba2, 0, ba2.Length);
+                byte[] ba2 = asen.GetBytes(value + "\n");
+                stm.Write(ba2, 0, ba2.Length);
 
-                    byte[] bbk = new byte[100];
+                byte[] bbk = new byte[100];
 
-                    k = stm.Read(bbk, 0, 100);
+                k = stm.Read(bbk, 0, 100);
 
-                    for (int i = 0; i < k; i++)
-                        Console.Write(Convert.ToChar(bbk[i]));
+                for (int i = 0; i < k; i++)
+                    Console.Write(Convert.ToChar(bbk[i]));
 
-                    tcpclnt.Close();
-                }
-                catch{
-                    Logger.Println("Failed to establish connection with: " + ip.ToString());
-                }
+                tcpclnt.Close();
+            }
+            catch{
+                Logger.Println("Failed to establish connection with: " + ip.ToString());
             }
         }
     }

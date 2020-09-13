@@ -78,12 +78,23 @@ namespace RadioTools
         private static void SetURLs()
         {
             List<ConnectionDetails> connections = Serializer.LoadJSON<List<ConnectionDetails>>("connections");
+            SetURLs(connections);
+        }
+
+        private static void SetURLs(List<ConnectionDetails> connections)
+        {
             NetworkTools.SetURLs(connections);
         }
 
         private static void SetVolume()
         {
-            throw new System.NotImplementedException();
+            List<ConnectionDetails> connections = Serializer.LoadJSON<List<ConnectionDetails>>("connections");
+            SetVolume(connections);
+        }
+
+        private static void SetVolume(List<ConnectionDetails> connections)
+        {
+            NetworkTools.SetVolume(connections);
         }
 
         private static void Run()
@@ -91,7 +102,8 @@ namespace RadioTools
             List<ConnectionDetails> connections = new List<ConnectionDetails>();
             connections = NetworkTools.Scan();
             Serializer.SaveJSON(connections, "connections");
-            NetworkTools.SetURLs(connections);
+            SetURLs(connections);
+            SetVolume(connections);
         }
 
         private static void DisableOutput()
