@@ -7,5 +7,6 @@
   "timeout": 200,
   "subnet": "192.168.0.",
   "range": 255,
+  "volume": 90,
   "setVolumeCommand": "SETVOLUME"
 }

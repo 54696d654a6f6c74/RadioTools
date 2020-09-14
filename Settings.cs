@@ -23,7 +23,7 @@ namespace RadioTools
             public int timeout {get; set;} = 200;
             public string subnet {get; set;} = "192.168.0.";
             public ushort range {get; set;} = 255;
-            public ushort volume = 90;
+            public ushort volume {get; set;} = 90;
             public string setVolumeCommand {get; set;} = "SETVOLUME";
         }
     }
