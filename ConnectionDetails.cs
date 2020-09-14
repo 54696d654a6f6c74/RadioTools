@@ -9,7 +9,7 @@ namespace RadioTools
     {
         // Check Settings.cs line 14 for the reason
         // why these have public setters. I swear, 
-        // I'm never doing JSON serializatio nagain....
+        // I'm never doing JSON serialization again....
 
         public IPAddress IP {get; set;}
         public string hostname {get; set;}
