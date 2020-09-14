@@ -107,14 +107,14 @@ namespace RadioTools
             try{
                 TcpClient tcpclnt = new TcpClient();
 
-                tcpclnt.Connect(ip, 1999);
+                tcpclnt.Connect(ip, Settings.dat.connectionPort);
 
-                string str = "mgradio_client\n";
+                string str = Settings.dat.connectionString + "\n";
                 Stream stm = tcpclnt.GetStream();
                 ASCIIEncoding asen = new ASCIIEncoding();
 
-                byte[] bb = new byte[100];
-                int k = stm.Read(bb, 0, 100);
+                byte[] bb = new byte[Settings.dat.communicationByteSize];
+                int k = stm.Read(bb, 0, Settings.dat.communicationByteSize);
 
                 for (int i = 0; i < k; i++)
                     Console.Write(Convert.ToChar(bb[i]));
@@ -129,12 +129,12 @@ namespace RadioTools
                 byte[] ba2 = asen.GetBytes(value + "\n");
                 stm.Write(ba2, 0, ba2.Length);
 
-                byte[] bbk = new byte[100];
+                bb = new byte[Settings.dat.communicationByteSize];
 
-                k = stm.Read(bbk, 0, 100);
+                k = stm.Read(bb, 0, Settings.dat.communicationByteSize);
 
                 for (int i = 0; i < k; i++)
-                    Console.Write(Convert.ToChar(bbk[i]));
+                    Console.Write(Convert.ToChar(bb[i]));
 
                 tcpclnt.Close();
             }

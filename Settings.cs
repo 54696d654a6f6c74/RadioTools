@@ -15,6 +15,9 @@ namespace RadioTools
         // private setter properties......
         public class Data
         {
+            public string connectionString {get; set;} = "mgradio_client";
+            public ushort communicationByteSize {get; set;} = 100;
+            public int connectionPort {get; set;} = 1999;
             public string URL {get; set;} = "";
             public string setURLcommand {get; set;} = "SETURL";
             public int timeout {get; set;} = 200;
