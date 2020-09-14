@@ -116,8 +116,8 @@ namespace RadioTools
             System.Console.WriteLine("Available commands:");
             System.Console.WriteLine("scan, seturls, setvol");
             System.Console.WriteLine("\nAvailable flags:");
-            System.Console.WriteLine("-n\r\t Quick scan\r\t -> will not save connections.json");
-            System.Console.WriteLine("-s\r\t Silent\r\t -> will not output to console");
+            System.Console.WriteLine("-n\t Quick scan\t -> will not save connections.json");
+            System.Console.WriteLine("-s\t Silent\t\t -> will not output to console");
         }
     }
 }
