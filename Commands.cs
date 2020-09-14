@@ -35,6 +35,8 @@ namespace RadioTools
 
             if(flags.Contains('s'))
                 DisableOutput();
+            if(flags.Contains('l'))
+                DisableLogging();
 
             mapper[args[0]]();
         }
@@ -111,12 +113,20 @@ namespace RadioTools
             System.Console.SetOut(System.IO.TextWriter.Null);
         }
 
+        private static void DisableLogging()
+        {
+            Logger.enabled = false;
+        }
+
+        // Using a regular print so it doesn't override the log
         private static void Help()
         {
+            DisableLogging();
             System.Console.WriteLine("Available commands:");
             System.Console.WriteLine("scan, seturls, setvol");
             System.Console.WriteLine("\nAvailable flags:");
             System.Console.WriteLine("-n\t Quick scan\t -> will not save connections.json");
+            System.Console.WriteLine("-l\t No logging\t -> will not override the log.txt");
             System.Console.WriteLine("-s\t Silent\t\t -> will not output to console");
         }
     }
