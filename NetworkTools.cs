@@ -45,7 +45,7 @@ namespace RadioTools
 
             Stopwatch timer = Stopwatch.StartNew();
             Logger.Println("Scanning...");
-            for(int i = 0; i < 51; i++)
+            for(int i = 0; i < threads.Length; i++)
             {
                 int temp = i;
                 threads[temp] = new Thread(() => Work(temp*5, (temp*5)+5));
@@ -79,42 +79,27 @@ namespace RadioTools
 
         public static void SetURLs(List<ConnectionDetails> targets)
         {
-            Thread[] threads = new Thread[targets.Count];
-
-            for(int i = 0; i < targets.Count; i++)
-            {
-                int temp = i;
-                threads[temp] = new Thread(() => SetURL(targets[temp].IP));
-                threads[temp].Start();
-            }
-            
-            foreach(Thread t in threads)
-                t.Join();
-
-            void SetURL(IPAddress ip)
-            {
-                SendCommand(ip, "SETURL", Settings.dat.URL);
-            }
+            StartSetThreadedJob(targets, Settings.dat.setURLcommand, Settings.dat.URL);
         }
 
         public static void SetVolume(List<ConnectionDetails> targets)
+        {
+            StartSetThreadedJob(targets, Settings.dat.setVolumeCommand, Settings.dat.volume.ToString());
+        }
+
+        private static void StartSetThreadedJob(List<ConnectionDetails> targets, string command, string value)
         {
             Thread[] threads = new Thread[targets.Count];
 
             for(int i = 0; i < targets.Count; i++)
             {
                 int temp = i;
-                threads[temp] = new Thread(() => SetVol(targets[temp].IP));
+                threads[temp] = new Thread(() => SendCommand(targets[temp].IP, command, value));
                 threads[temp].Start();
             }
             
             foreach(Thread t in threads)
                 t.Join();
-
-            void SetVol(IPAddress ip)
-            {
-                SendCommand(ip, "SETVOLUME", Settings.dat.volume.ToString());
-            }
         }
 
         private static void SendCommand(IPAddress ip, string command, string value)
