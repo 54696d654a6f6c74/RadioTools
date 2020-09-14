@@ -1,4 +1,5 @@
 {
+  "maxTasksPerThread": 5,
   "connectionString": "mgradio_client",
   "communicationByteSize": 100,
   "connectionPort": 1999,

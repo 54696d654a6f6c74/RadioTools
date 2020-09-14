@@ -41,14 +41,20 @@ namespace RadioTools
         {
             Logger.Println("Preparing threads");
             List<ConnectionDetails> alive = new List<ConnectionDetails>();
-            Thread[] threads = new Thread[51];
+
+            int num = Settings.dat.maxTasksPerThread;
+
+            while((Settings.dat.range + 1) % num != 0 && num > 0)
+                num--;
+
+            Thread[] threads = new Thread[Settings.dat.range / num];
 
             Stopwatch timer = Stopwatch.StartNew();
             Logger.Println("Scanning...");
             for(int i = 0; i < threads.Length; i++)
             {
                 int temp = i;
-                threads[temp] = new Thread(() => Work(temp*5, (temp*5)+5));
+                threads[temp] = new Thread(() => Work(temp*num, (temp*num)+num));
                 threads[temp].Start();
             }
 
@@ -79,11 +85,13 @@ namespace RadioTools
 
         public static void SetURLs(List<ConnectionDetails> targets)
         {
+            Logger.Println("Settings URLs");
             StartSetThreadedJob(targets, Settings.dat.setURLcommand, Settings.dat.URL);
         }
 
         public static void SetVolume(List<ConnectionDetails> targets)
         {
+            Logger.Println("Settings Volumes");
             StartSetThreadedJob(targets, Settings.dat.setVolumeCommand, Settings.dat.volume.ToString());
         }
 
@@ -102,6 +110,7 @@ namespace RadioTools
                 t.Join();
         }
 
+        // Figur out a way to recycle the connections!
         private static void SendCommand(IPAddress ip, string command, string value)
         {
             try{
