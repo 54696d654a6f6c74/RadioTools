@@ -20,12 +20,17 @@ namespace RadioTools
             public ushort communicationByteSize {get; set;} = 100;
             public int connectionPort {get; set;} = 1999;
             public string URL {get; set;} = "";
-            public string setURLcommand {get; set;} = "SETURL";
+            public string[] setURLcommand {get; set;} = {"SETURL"};
             public int timeout {get; set;} = 200;
             public string subnet {get; set;} = "192.168.0.";
             public ushort range {get; set;} = 255;
             public ushort volume {get; set;} = 90;
             public string setVolumeCommand {get; set;} = "SETVOLUME";
+            public ushort cmdNameSize {get; set;} = 32;
+            public ushort responseSize {get; set;} = 256;
+            public string newCMDRequest {get; set;} = "n";
+            public string callCMDRequest {get; set;} = "x";
+            public string getCMDsRequest {get; set;} = "g";
         }
     }
 }

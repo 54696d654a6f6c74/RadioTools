@@ -1,11 +1,9 @@
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.IO;
 using System.Text;
 using System.Diagnostics;
 using System.Collections.Generic;
-using System.Threading;
 using System;
 
 namespace RadioTools
@@ -39,29 +37,14 @@ namespace RadioTools
 
         public static List<ConnectionDetails> Scan()
         {
-            Logger.Println("Preparing threads");
             List<ConnectionDetails> alive = new List<ConnectionDetails>();
 
-            int num = Settings.dat.maxTasksPerThread;
-
-            while((Settings.dat.range + 1) % num != 0 && num > 0)
-                num--;
-
-            Thread[] threads = new Thread[Settings.dat.range / num];
-
             Stopwatch timer = Stopwatch.StartNew();
-            Logger.Println("Scanning...");
-            for(int i = 0; i < threads.Length; i++)
-            {
-                int temp = i;
-                threads[temp] = new Thread(() => Work(temp*num, (temp*num)+num));
-                threads[temp].Start();
-            }
 
-            foreach(Thread t in threads)
-                t.Join();
+            Threads.StartTreadedJob(Threads.CalcReqThreads(Settings.dat.range), Work);
 
             timer.Stop();
+
             Logger.Print("Finished scanning in: ");
             Logger.Println(timer.Elapsed.ToString());
 
@@ -83,73 +66,107 @@ namespace RadioTools
             }
         }
 
-        public static void SetURLs(List<ConnectionDetails> targets)
+        public static void CreateCommand(string script, string name)
         {
-            Logger.Println("Settings URLs");
-            StartSetThreadedJob(targets, Settings.dat.setURLcommand, Settings.dat.URL);
-        }
+            List<ConnectionDetails> targets = Serializer.LoadJSON<List<ConnectionDetails>>("connections");
 
-        public static void SetVolume(List<ConnectionDetails> targets)
-        {
-            Logger.Println("Settings Volumes");
-            StartSetThreadedJob(targets, Settings.dat.setVolumeCommand, Settings.dat.volume.ToString());
-        }
+            UTF8Encoding encoder = new UTF8Encoding();
 
-        private static void StartSetThreadedJob(List<ConnectionDetails> targets, string command, string value)
-        {
-            Thread[] threads = new Thread[targets.Count];
+            Threads.StartTreadedJob(Threads.CalcReqThreads(targets.Count), Work);
 
-            for(int i = 0; i < targets.Count; i++)
+            void Work(int start, int end)
             {
-                int temp = i;
-                threads[temp] = new Thread(() => SendCommand(targets[temp].IP, command, value));
-                threads[temp].Start();
+                TcpClient client = new TcpClient();
+
+                Request newCMDReq = new Request(encoder, Settings.dat.newCMDRequest, script, name);
+                byte[] cmdSize = BitConverter.GetBytes(newCMDReq.dataEncoded[0].Length);
+                byte[] contName = Request.ContainerizeName(encoder, name);
+                
+                for(int i = start; i < end; i++)
+                {
+                    try{
+                        client.Connect(targets[i].IP, Settings.dat.connectionPort);
+
+                        string response = encoder.GetString(SendNewCMDScript(newCMDReq, cmdSize, contName, client));
+
+                        Logger.Println(String.Format("Response from {0}:\n{1}\n", targets[i].IP, response));
+                    }
+                    catch
+                    {
+                        Logger.Println("Failed to establish connection with: " + targets[i].IP.ToString());
+                    }
+                }
             }
-            
-            foreach(Thread t in threads)
-                t.Join();
         }
 
-        // Figur out a way to recycle the connections!
-        private static void SendCommand(IPAddress ip, string command, string value)
+        public static void CallCommand(string name)
         {
-            try{
-                TcpClient tcpclnt = new TcpClient();
+            List<ConnectionDetails> targets = Serializer.LoadJSON<List<ConnectionDetails>>("connections");
 
-                tcpclnt.Connect(ip, Settings.dat.connectionPort);
+            UTF8Encoding encoder = new UTF8Encoding();
 
-                string str = Settings.dat.connectionString + "\n";
-                Stream stm = tcpclnt.GetStream();
-                ASCIIEncoding asen = new ASCIIEncoding();
+            Threads.StartTreadedJob(Threads.CalcReqThreads(targets.Count), Work);
 
-                byte[] bb = new byte[Settings.dat.communicationByteSize];
-                int k = stm.Read(bb, 0, Settings.dat.communicationByteSize);
+            void Work(int start, int end)
+            {
+                TcpClient client = new TcpClient();
 
-                for (int i = 0; i < k; i++)
-                    Console.Write(Convert.ToChar(bb[i]));
+                Request callCMDReq = new Request(encoder, Settings.dat.callCMDRequest, name);
+                byte[] contName = Request.ContainerizeName(encoder, name);
+                
+                for(int i = start; i < end; i++)
+                {
+                    try
+                    {
+                        client.Connect(targets[i].IP, Settings.dat.connectionPort);
+                        Logger.Println("Connected!");
+                        Logger.Println(name);
 
+                        string response = encoder.GetString(CallCMD(callCMDReq, contName, client));
 
-                byte[] ba = asen.GetBytes(str);
-                stm.Write(ba, 0, ba.Length);
-
-                byte[] ba1 = asen.GetBytes(command + "\n");
-                stm.Write(ba1, 0, ba1.Length);
-
-                byte[] ba2 = asen.GetBytes(value + "\n");
-                stm.Write(ba2, 0, ba2.Length);
-
-                bb = new byte[Settings.dat.communicationByteSize];
-
-                k = stm.Read(bb, 0, Settings.dat.communicationByteSize);
-
-                for (int i = 0; i < k; i++)
-                    Console.Write(Convert.ToChar(bb[i]));
-
-                tcpclnt.Close();
+                        Logger.Println(string.Format("Response from {0}:\n{1}\n", targets[i].IP, response));
+                    }
+                    catch
+                    {
+                        Logger.Println("Failed to establish connection wtih: " + targets[i].IP.ToString());
+                    }
+                }
             }
-            catch{
-                Logger.Println("Failed to establish connection with: " + ip.ToString());
-            }
+        }
+
+        private static byte[] SendNewCMDScript(Request req, byte[] cmdSize, byte[] containName, TcpClient client)
+        {
+            NetworkStream nStream = client.GetStream();
+
+            nStream.Write(req.reqEncoded, 0, req.reqEncoded.Length);
+
+            nStream.Write(cmdSize, 0, cmdSize.Length);
+            nStream.Write(req.dataEncoded[0], 0, req.dataEncoded[0].Length);
+            
+            nStream.Write(containName, 0, containName.Length);
+
+            byte[] responseEncoded = new byte[Settings.dat.responseSize];
+            int numBytes = nStream.Read(responseEncoded, 0, responseEncoded.Length);
+
+            nStream.Close();
+
+            return responseEncoded;
+        }
+
+        private static byte[] CallCMD(Request req, byte[] contName, TcpClient client)
+        {
+            NetworkStream nSteram = client.GetStream();
+
+            nSteram.Write(req.reqEncoded, 0, req.reqEncoded.Length);
+
+            nSteram.Write(contName, 0, contName.Length);
+
+            byte[] responseEncoded = new byte[Settings.dat.responseSize];
+            int numBytes = nSteram.Read(responseEncoded, 0, responseEncoded.Length);
+
+            nSteram.Close();
+
+            return responseEncoded;
         }
     }
 }

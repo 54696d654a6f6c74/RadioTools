@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 
 namespace RadioTools
 {
@@ -8,6 +9,7 @@ namespace RadioTools
 
         private static Dictionary<string, ExecuteCommand> mapper;
         private static List<char> flags;
+        private static string[] values;
 
         public static void Parse(string[] args)
         {
@@ -17,14 +19,14 @@ namespace RadioTools
                 return;
             }
 
-            if(ParseFlags(args) == false)
-                return;
+            ParseFlags(args);
+            CollectValues(args);
 
             mapper = new Dictionary<string, ExecuteCommand>();
 
             mapper.Add("scan", Scan);
-            mapper.Add("seturls", SetURLs);
-            mapper.Add("setvol", SetVolume);
+            mapper.Add("newcmd", NewCMD);
+            mapper.Add("callcmd", CallCMD);
             mapper.Add("help", Help);
 
             if(!mapper.ContainsKey(args[0]))
@@ -41,7 +43,7 @@ namespace RadioTools
             mapper[args[0]]();
         }
 
-        private static bool ParseFlags(string[] args)
+        private static void ParseFlags(string[] args)
         {
             flags = new List<char>();
 
@@ -55,17 +57,29 @@ namespace RadioTools
                             flags.Add(c);
                         else {
                             Logger.Println("Please don't repeat flags");
-                            return false;
                         }
                     }
                 }
-                else
-                {
-                    Logger.Println("Invalid arguments, please try again");
-                    return false;
-                }
             }
-            return true;
+        }
+        private static void CollectValues(string[] args)
+        {
+            int count = args.Length - (flags.Count + 1);
+
+            if(count <= 0)
+                return;
+            try
+            {
+                values = new string[count];
+
+                for(int i = 0; i < count; i++)
+                    values[i] = args[args.Length - count + i];
+            }
+            catch
+            {
+                Logger.Println("Something went wrong when collecting values!");
+                return;
+            }
         }
 
         private static void Scan()
@@ -77,26 +91,62 @@ namespace RadioTools
                 Serializer.SaveJSON(connections, "connections");
         }
 
-        private static void SetURLs()
+        private static void NewCMD()
         {
-            List<ConnectionDetails> connections = Serializer.LoadJSON<List<ConnectionDetails>>("connections");
-            SetURLs(connections);
+            if(values == null || values[0] == string.Empty)
+            {
+                Logger.Println("Invalid command, please try again");
+                return;
+            }
+            
+            string name;
+            if(values.Length < 2)
+            {
+                Logger.Println("No command name specified, using file name as command name...");
+                name = ExtractName(values[0]);
+            }
+            else name = values[1];
+
+
+            NewCMD(values[0], name);
+
+            string ExtractName(string path)
+            {
+                string[] parts = path.Split(System.IO.Path.DirectorySeparatorChar);
+
+                string file = parts[parts.Length - 1];
+                parts = file.Split('.');
+
+                string name = parts[0];
+
+                if(parts.Length > 2)
+                    Logger.Println("WARNING: Please use '.' only as a speparator for file name and file extension! Using " + name + "as command name...");
+
+                return name;
+            }
         }
 
-        private static void SetURLs(List<ConnectionDetails> connections)
+        private static void NewCMD(string path, string name)
         {
-            NetworkTools.SetURLs(connections);
+            string script = File.ReadAllText(path);
+
+            NetworkTools.CreateCommand(script, name);
         }
 
-        private static void SetVolume()
+        private static void CallCMD()
         {
-            List<ConnectionDetails> connections = Serializer.LoadJSON<List<ConnectionDetails>>("connections");
-            SetVolume(connections);
+            if(values[0] == null || values[0] == string.Empty)
+            {
+                Logger.Println("Invalid command, please try again");
+                return;
+            }
+
+            CallCMD(values[0]);
         }
 
-        private static void SetVolume(List<ConnectionDetails> connections)
+        private static void CallCMD(string cmd)
         {
-            NetworkTools.SetVolume(connections);
+            NetworkTools.CallCommand(cmd);
         }
 
         private static void Run()
@@ -104,8 +154,6 @@ namespace RadioTools
             List<ConnectionDetails> connections = new List<ConnectionDetails>();
             connections = NetworkTools.Scan();
             Serializer.SaveJSON(connections, "connections");
-            SetURLs(connections);
-            SetVolume(connections);
         }
 
         private static void DisableOutput()
@@ -123,7 +171,7 @@ namespace RadioTools
         {
             DisableLogging();
             System.Console.WriteLine("Available commands:");
-            System.Console.WriteLine("scan, seturls, setvol");
+            System.Console.WriteLine("newcmd, callcmd");
             System.Console.WriteLine("\nAvailable flags:");
             System.Console.WriteLine("-n\t Quick scan\t -> will not save connections.json");
             System.Console.WriteLine("-l\t No logging\t -> will not override the log.txt");
