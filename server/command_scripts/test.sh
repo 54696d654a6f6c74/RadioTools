@@ -1,2 +1,2 @@
 #!/usr/bin/bash
-mkdir testFolder
+echo "Yay this works!"
