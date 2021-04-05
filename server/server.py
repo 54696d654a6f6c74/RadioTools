@@ -94,7 +94,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
     sock.listen()
     while True:
         conn, addr = sock.accept()
-        print("Connected by: " + addr)
+        print("Connected by: ", addr)
 
         req = conn.recv(1).decode()
         conn.sendall(b'K')
