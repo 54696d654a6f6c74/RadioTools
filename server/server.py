@@ -59,7 +59,7 @@ def create_command_request(conn):
 
         cmd_file = conn.recv(cmd_file_size)
 
-        cmd_file_name = conn.recv(64)
+        cmd_file_name = conn.recv(32)
 
         conn.sendall(b'Done')
 
@@ -76,13 +76,8 @@ def get_commands_request(conn):
 
 def call_command_request(conn):
     with conn:
-        cmd = conn.recv(64)
-        out = call_command(cmd.decode())
-
-        if out is None:
-            conn.sendall(b'Done')
-        else:
-            conn.sendall(bytearray(out, "utf-8"))
+        cmd = conn.recv(32)
+        call_command(cmd.decode())
 
 
 print("Starting server on: " + HOST + ":" + str(PORT))
@@ -97,7 +92,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         print("Connected by: ", addr)
 
         req = conn.recv(1).decode()
-        conn.sendall(b'K')
 
         if req == 'g':
             get_commands_request(conn)
@@ -105,3 +99,5 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             create_command_request(conn)
         elif req == 'x':
             call_command_request(conn)
+
+        conn.sendall(b'K')
