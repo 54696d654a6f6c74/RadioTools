@@ -94,6 +94,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         print("Connected by: ", addr)
 
         req = conn.recv(1).decode()
+        print("Recieved: " + req)
 
         if req == 'g':
             get_commands_request(conn)
