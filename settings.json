@@ -4,10 +4,17 @@
   "communicationByteSize": 100,
   "connectionPort": 1999,
   "URL": "",
-  "setURLcommand": "SETURL",
+  "setURLcommand": [
+    "SETURL"
+  ],
   "timeout": 200,
-  "subnet": "192.168.0.",
+  "subnet": "127.0.0.",
   "range": 255,
   "volume": 90,
-  "setVolumeCommand": "SETVOLUME"
+  "setVolumeCommand": "SETVOLUME",
+  "cmdNameSize": 32,
+  "responseSize": 256,
+  "newCMDRequest": "n",
+  "callCMDRequest": "x",
+  "getCMDsRequest": "g"
 }
