@@ -1,9 +1,15 @@
 import socket
 
 import stat
-from os import listdir, chmod
+from os import listdir, chmod, path
 
 from subprocess import call
+
+if not path.isfile("HOST"):
+    writer = open("HOST", 'w')
+    local_ip = socket.gethostbyname(socket.gethostname())
+    writer.write(local_ip)
+    writer.close()
 
 # splitlines removes trailing \n
 # because python adds them when reading files

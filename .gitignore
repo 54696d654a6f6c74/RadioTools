@@ -131,3 +131,6 @@ _NCrunch*
 log.txt
 connections.json
 .vscode*
+
+# Server ignores
+HOST
