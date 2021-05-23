@@ -1,15 +1,24 @@
 import socket
 
 import stat
-from os import listdir, chmod, path
+from os import listdir, chmod
 
 from subprocess import call
 
-if not path.isfile("HOST"):
-    writer = open("HOST", 'w')
-    local_ip = socket.gethostbyname(socket.gethostname())
-    writer.write(local_ip)
-    writer.close()
+
+logfile = open("LOG", 'w')
+
+
+def log(message):
+    print(message)
+    logfile.write(message)
+
+
+# if not path.isfile("HOST"):
+writer = open("HOST", 'w')
+local_ip = socket.gethostbyname(socket.gethostname())
+writer.write(local_ip)
+writer.close()
 
 # splitlines removes trailing \n
 # because python adds them when reading files
@@ -88,7 +97,7 @@ def call_command_request(conn):
         conn.sendall(b'K')
 
 
-print("Starting server on: " + HOST + ":" + str(PORT))
+log("Starting server on: " + HOST + ":" + str(PORT))
 
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -97,10 +106,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
     sock.listen()
     while True:
         conn, addr = sock.accept()
-        print("Connected by: ", addr)
+        log("Connected by: ", addr)
 
         req = conn.recv(1).decode()
-        print("Recieved: " + req)
+        log("Recieved: " + req)
 
         if req == 'g':
             get_commands_request(conn)
