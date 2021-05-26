@@ -1,9 +1,10 @@
 import socket
+from time import sleep
 
 import stat
 from os import listdir, chmod
 
-from subprocess import call
+from subprocess import call, run
 
 
 logfile = open("LOG", 'w')
@@ -11,7 +12,7 @@ logfile = open("LOG", 'w')
 
 def log(message):
     print(message)
-    logfile.write(message)
+    logfile.write(message + "\n")
 
 
 # if not path.isfile("HOST"):
@@ -65,7 +66,12 @@ def call_command(cmd: str) -> str:
     cmd = cmd.rstrip('\x00')
     path = CMD_PATH + "/" + cmd + ".sh"
 
-    return call(["sh", path])
+    result = run(["sh", path], capture_output=True)
+
+    if result.stderr != b'':
+        return (result.stdout + result.stderr).decode()
+    else:
+        return result.stdout.decode()
 
 
 def create_command_request(conn):
@@ -92,28 +98,37 @@ def get_commands_request(conn):
 def call_command_request(conn):
     with conn:
         cmd = conn.recv(32)
-        call_command(cmd.decode())
+        out = call_command(cmd.decode())
+        log(out)
 
         conn.sendall(b'K')
 
 
 log("Starting server on: " + HOST + ":" + str(PORT))
+delay = 10
 
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-    load_commands()
-    sock.bind((HOST, PORT))
-    sock.listen()
-    while True:
-        conn, addr = sock.accept()
-        log("Connected by: ", addr)
+while True:
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            load_commands()
+            sock.bind((HOST, PORT))
+            sock.listen()
+            print("Succsess, now listening...")
+            while True:
+                conn, addr = sock.accept()
+                log("Connected by: " + str(addr[0]))
 
-        req = conn.recv(1).decode()
-        log("Recieved: " + req)
+                req = conn.recv(1).decode()
+                log("Recieved: " + req)
 
-        if req == 'g':
-            get_commands_request(conn)
-        elif req == 'n':
-            create_command_request(conn)
-        elif req == 'x':
-            call_command_request(conn)
+                if req == 'g':
+                    get_commands_request(conn)
+                elif req == 'n':
+                    create_command_request(conn)
+                elif req == 'x':
+                    call_command_request(conn)
+    except OSError:
+        log("OS error on host, will reinit in " + str(delay) + " sec...")
+        sleep(delay)
+        continue
