@@ -4,7 +4,7 @@ from time import sleep
 import stat
 from os import listdir, chmod
 
-from subprocess import call, run
+from subprocess import run
 
 
 logfile = open("LOG", 'w')
