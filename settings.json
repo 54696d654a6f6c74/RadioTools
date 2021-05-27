@@ -1,17 +1,9 @@
 {
   "maxTasksPerThread": 5,
-  "connectionString": "mgradio_client",
-  "communicationByteSize": 100,
   "connectionPort": 1999,
-  "URL": "",
-  "setURLcommand": [
-    "SETURL"
-  ],
   "timeout": 200,
-  "subnet": "127.0.0.",
+  "subnet": "127.0.1.",
   "range": 255,
-  "volume": 90,
-  "setVolumeCommand": "SETVOLUME",
   "cmdNameSize": 32,
   "responseSize": 256,
   "newCMDRequest": "n",
