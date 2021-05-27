@@ -14,14 +14,16 @@ namespace RadioTools
         public IPAddress IP {get; set;}
         public string hostname {get; set;}
         public bool alive {get; set;}
+        public string[] availableCMDs {get; set;}
 
         public ConnectionDetails() {}
 
-        public ConnectionDetails(IPAddress _ip, string _hostname, bool _alive)
+        public ConnectionDetails(IPAddress _ip, string _hostname, bool _alive, string[] _availableCMDs)
         {
             IP = _ip;
             hostname = _hostname;
             alive = _alive;
+            availableCMDs = _availableCMDs;
         }
 
         public ConnectionDetails(IPAddress ip)
@@ -33,6 +35,7 @@ namespace RadioTools
                 Logger.Println("Device found at: " + ip.ToString());
                 hostname = NetworkTools.GetHostName(IP);
             }
+            availableCMDs = new string[]{"unknown"};
         }
 
         public bool Equals(ConnectionDetails other)

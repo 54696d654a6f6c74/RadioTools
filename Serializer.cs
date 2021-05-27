@@ -7,7 +7,7 @@ namespace RadioTools
     // standard for JSON
     public static class Serializer
     {
-        // This generates new opbject only when
+        // Generates new opbject only when
         // necessary and disposes when they're
         // out of scope to save memory
         public static JsonSerializerOptions options{

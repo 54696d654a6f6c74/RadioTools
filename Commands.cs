@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -15,7 +16,7 @@ namespace RadioTools
         {
             if(args.Length == 0 || args[0] == "")
             {
-                Run();
+                Scan();
                 return;
             }
 
@@ -85,9 +86,11 @@ namespace RadioTools
         private static void Scan()
         {
             List<ConnectionDetails> connections = new List<ConnectionDetails>();
-            connections = NetworkTools.Scan();
+            bool getCMDs = flags == null || !flags.Contains('c');
 
-            if(!flags.Contains('n'))
+            connections = NetworkTools.Scan(getCMDs);
+
+            if(flags == null || !flags.Contains('n'))
                 Serializer.SaveJSON(connections, "connections");
         }
 
@@ -149,16 +152,9 @@ namespace RadioTools
             NetworkTools.CallCommand(cmd);
         }
 
-        private static void Run()
-        {
-            List<ConnectionDetails> connections = new List<ConnectionDetails>();
-            connections = NetworkTools.Scan();
-            Serializer.SaveJSON(connections, "connections");
-        }
-
         private static void DisableOutput()
         {
-            System.Console.SetOut(System.IO.TextWriter.Null);
+            Console.SetOut(System.IO.TextWriter.Null);
         }
 
         private static void DisableLogging()
@@ -170,12 +166,16 @@ namespace RadioTools
         private static void Help()
         {
             DisableLogging();
-            System.Console.WriteLine("Available commands:");
-            System.Console.WriteLine("newcmd, callcmd");
-            System.Console.WriteLine("\nAvailable flags:");
-            System.Console.WriteLine("-n\t Quick scan\t -> will not save connections.json");
-            System.Console.WriteLine("-l\t No logging\t -> will not override the log.txt");
-            System.Console.WriteLine("-s\t Silent\t\t -> will not output to console");
+            Console.WriteLine("Available commands:");
+            Console.WriteLine("scan\t- Scans the network for available servers and saves them as in connections.json file\n\tSytax: [flags]\n\tNote: This command is ran by default if none are specified");
+            Console.WriteLine("newcmd\t- Sends a script to all available servers\n\tSyntax: <path> [name]\n\tNote: If name is ommited, the script name will be used instead");
+            Console.WriteLine("callcmd\t- Calls a script on all available servers\n\tSyntax: <name>");
+
+            Console.WriteLine("\nAvailable flags:");
+            Console.WriteLine("-n\t Quick scan\t -> will not save connections.json");
+            Console.WriteLine("-l\t No logging\t -> will not override the log.txt");
+            Console.WriteLine("-c\t No query\t -> will not querry for available commands from the detected servers");
+            Console.WriteLine("-s\t Silent\t\t -> will not output to console");
         }
     }
 }

@@ -17,7 +17,7 @@ namespace RadioTools
                 dataEncoded[i] = encoder.GetBytes(data[i]);
         }
 
-        public static byte[] ContainerizeName(Encoding encoder, string name)
+        public static byte[] ContainerizeString(Encoding encoder, string name)
         {
             if(name.Length > Settings.dat.cmdNameSize)
                 return null;

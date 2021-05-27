@@ -2,7 +2,7 @@
   "maxTasksPerThread": 5,
   "connectionPort": 1999,
   "timeout": 200,
-  "subnet": "127.0.1.",
+  "subnet": "192.168.0.",
   "range": 255,
   "cmdNameSize": 32,
   "responseSize": 256,

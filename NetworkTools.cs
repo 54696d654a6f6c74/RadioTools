@@ -35,9 +35,10 @@ namespace RadioTools
             return null;
         }
 
-        public static List<ConnectionDetails> Scan()
+        public static List<ConnectionDetails> Scan(bool getAvailableCMDs)
         {
             List<ConnectionDetails> alive = new List<ConnectionDetails>();
+            UTF8Encoding encoder = new UTF8Encoding();
 
             Stopwatch timer = Stopwatch.StartNew();
 
@@ -57,11 +58,33 @@ namespace RadioTools
 
             void Work(int start, int end)
             {
+                TcpClient client = new TcpClient();
+                Request req = new Request(encoder, Settings.dat.getCMDsRequest);
+
                 for(int i = start ; i < end; i++)
                 {
                     ConnectionDetails conn = new ConnectionDetails(IPAddress.Parse(Settings.dat.subnet+i));
                     if(conn.alive)
+                    {
+                        if(getAvailableCMDs)
+                        {
+                            try
+                            {
+                                client.Connect(conn.IP, Settings.dat.connectionPort);
+
+                                byte[] cmds = GetAvailableCMDs(req, client);
+                                string decoded = encoder.GetString(cmds);
+                                
+                                conn.availableCMDs = decoded.Split('\n');
+                            }
+                            catch
+                            {
+                                Logger.Println("Failed to retrive avialable commands from: " + conn.IP.ToString());
+                            }
+                        }
+
                         alive.Add(conn);
+                    }
                 }
             }
         }
@@ -80,7 +103,7 @@ namespace RadioTools
 
                 Request newCMDReq = new Request(encoder, Settings.dat.newCMDRequest, script, name);
                 byte[] cmdSize = BitConverter.GetBytes(newCMDReq.dataEncoded[0].Length);
-                byte[] contName = Request.ContainerizeName(encoder, name);
+                byte[] contName = Request.ContainerizeString(encoder, name);
                 
                 for(int i = start; i < end; i++)
                 {
@@ -112,7 +135,7 @@ namespace RadioTools
                 TcpClient client = new TcpClient();
 
                 Request callCMDReq = new Request(encoder, Settings.dat.callCMDRequest, name);
-                byte[] contName = Request.ContainerizeName(encoder, name);
+                byte[] contName = Request.ContainerizeString(encoder, name);
                 
                 for(int i = start; i < end; i++)
                 {
@@ -134,6 +157,26 @@ namespace RadioTools
             }
         }
 
+        private static byte[] GetAvailableCMDs(Request req, TcpClient client)
+        {
+            NetworkStream nStream = client.GetStream();
+
+            nStream.Write(req.reqEncoded, 0, req.reqEncoded.Length);
+            // Length of the incoming array
+            byte[] responseEncoded = new byte[Settings.dat.cmdNameSize / 8];
+
+            nStream.Read(responseEncoded, 0, responseEncoded.Length);
+            // Note: This assumes BOTH sides are littledian!
+            int len = BitConverter.ToInt32(responseEncoded);
+
+            responseEncoded = new byte[len];
+            nStream.Read(responseEncoded, 0, responseEncoded.Length);
+
+            nStream.Close();
+
+            return responseEncoded;
+        }
+
         private static byte[] SendNewCMDScript(Request req, byte[] cmdSize, byte[] containName, TcpClient client)
         {
             NetworkStream nStream = client.GetStream();
@@ -146,7 +189,7 @@ namespace RadioTools
             nStream.Write(containName, 0, containName.Length);
 
             byte[] responseEncoded = new byte[Settings.dat.responseSize];
-            int numBytes = nStream.Read(responseEncoded, 0, responseEncoded.Length);
+            nStream.Read(responseEncoded, 0, responseEncoded.Length);
 
             nStream.Close();
 
@@ -162,7 +205,7 @@ namespace RadioTools
             nSteram.Write(contName, 0, contName.Length);
 
             byte[] responseEncoded = new byte[Settings.dat.responseSize];
-            int numBytes = nSteram.Read(responseEncoded, 0, responseEncoded.Length);
+            nSteram.Read(responseEncoded, 0, responseEncoded.Length);
 
             nSteram.Close();
 

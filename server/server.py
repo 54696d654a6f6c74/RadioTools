@@ -7,6 +7,9 @@ from os import listdir, chmod
 from subprocess import run
 
 
+def_bytesize = 32
+byte_order = "little"  # littledian
+
 logfile = open("LOG", 'w')
 
 
@@ -45,9 +48,12 @@ def load_commands():
     all_commands = listdir(CMD_PATH)
 
 
-def send_big_packet(conn, size, packet):
-    conn.sendall(int.to_bytes(size))
-    conn.sendall(packet)
+def send_big_packet(target, packet):
+    packet_len = len(packet)
+    packet_size = packet_len.to_bytes(int(def_bytesize / 8), byte_order)
+
+    target.sendall(packet_size)
+    target.sendall(packet)
 
 
 def create_command_file(data: str, name: str):
@@ -76,11 +82,13 @@ def call_command(cmd: str) -> str:
 
 def create_command_request(conn):
     with conn:
-        cmd_file_size = int.from_bytes(conn.recv(4), "little")
+        cmd_file_size = int.from_bytes(
+                                        conn.recv(int(def_bytesize / 8)),
+                                        byte_order)
 
         cmd_file = conn.recv(cmd_file_size)
 
-        cmd_file_name = conn.recv(32)
+        cmd_file_name = conn.recv(def_bytesize)
 
         conn.sendall(b'K')
 
@@ -90,14 +98,12 @@ def create_command_request(conn):
 def get_commands_request(conn):
     with conn:
         packet = bytearray('\n'.join(all_commands), "utf-8")
-        packet_size = len(bytearray('\n'.join(all_commands), "utf-8")) * 8
-
-        send_big_packet(conn, packet_size, packet)
+        send_big_packet(conn, packet)
 
 
 def call_command_request(conn):
     with conn:
-        cmd = conn.recv(32)
+        cmd = conn.recv(def_bytesize)
         out = call_command(cmd.decode())
         log(out)
 
@@ -114,7 +120,7 @@ while True:
             load_commands()
             sock.bind((HOST, PORT))
             sock.listen()
-            print("Succsess, now listening...")
+            log("Succsess, now listening...")
             while True:
                 conn, addr = sock.accept()
                 log("Connected by: " + str(addr[0]))
