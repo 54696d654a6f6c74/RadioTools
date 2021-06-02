@@ -18,9 +18,13 @@ def log(message):
     logfile.write(message + "\n")
 
 
-# if not path.isfile("HOST"):
 writer = open("HOST", 'w')
 local_ip = socket.gethostbyname(socket.gethostname())
+if "127." in local_ip:
+    print(local_ip)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.connect(("192.168.0.1", 69))
+    local_ip = sock.getsockname()[0]
 writer.write(local_ip)
 writer.close()
 
