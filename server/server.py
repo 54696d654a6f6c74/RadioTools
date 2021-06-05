@@ -10,12 +10,12 @@ from subprocess import run
 def_bytesize = 32
 byte_order = "little"  # littledian
 
-logfile = open("LOG", 'w')
-
 
 def log(message):
+    logfile = open("LOG", 'w')
     print(message)
     logfile.write(message + "\n")
+    logfile.close()
 
 
 writer = open("HOST", 'w')
