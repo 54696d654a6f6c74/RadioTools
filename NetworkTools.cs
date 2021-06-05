@@ -160,7 +160,7 @@ namespace RadioTools
         private static int GetResponseSize(NetworkStream nStream)
         {
             // Length of the incoming array
-            byte[] responseEncoded = new byte[Settings.dat.cmdNameSize / 8];
+            byte[] responseEncoded = new byte[Settings.dat.defPacketSize / 8];
 
             nStream.Read(responseEncoded, 0, responseEncoded.Length);
             // Note: This assumes BOTH sides are littledian!
@@ -196,7 +196,7 @@ namespace RadioTools
             
             nStream.Write(containName, 0, containName.Length);
 
-            byte[] responseEncoded = new byte[Settings.dat.responseSize];
+            byte[] responseEncoded = new byte[Settings.dat.defPacketSize];
             nStream.Read(responseEncoded, 0, responseEncoded.Length);
 
             nStream.Close();

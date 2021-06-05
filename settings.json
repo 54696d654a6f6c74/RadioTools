@@ -5,7 +5,7 @@
   "subnet": "192.168.0.",
   "range": 255,
   "cmdNameSize": 32,
-  "responseSize": 256,
+  "defPacketSize": 32,
   "newCMDRequest": "n",
   "callCMDRequest": "x",
   "getCMDsRequest": "g"

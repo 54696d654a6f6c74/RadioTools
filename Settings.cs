@@ -21,7 +21,7 @@ namespace RadioTools
             public string subnet {get; set;} = "192.168.0.";
             public ushort range {get; set;} = 255;
             public ushort cmdNameSize {get; set;} = 32;
-            public ushort responseSize {get; set;} = 256;
+            public ushort defPacketSize {get; set;} = 32;
             public string newCMDRequest {get; set;} = "n";
             public string callCMDRequest {get; set;} = "x";
             public string getCMDsRequest {get; set;} = "g";
