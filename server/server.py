@@ -6,6 +6,8 @@ from os import listdir, chmod
 
 from subprocess import run
 
+from datetime import datetime
+
 
 def_bytesize = 32
 byte_order = "little"  # littledian
@@ -17,6 +19,8 @@ def log(message):
     logfile.write(message + "\n")
     logfile.close()
 
+
+log("Initilized on: " + str(datetime.now()))
 
 writer = open("HOST", 'w')
 local_ip = socket.gethostbyname(socket.gethostname())
