@@ -157,11 +157,8 @@ namespace RadioTools
             }
         }
 
-        private static byte[] GetAvailableCMDs(Request req, TcpClient client)
+        private static int GetResponseSize(NetworkStream nStream)
         {
-            NetworkStream nStream = client.GetStream();
-
-            nStream.Write(req.reqEncoded, 0, req.reqEncoded.Length);
             // Length of the incoming array
             byte[] responseEncoded = new byte[Settings.dat.cmdNameSize / 8];
 
@@ -169,7 +166,18 @@ namespace RadioTools
             // Note: This assumes BOTH sides are littledian!
             int len = BitConverter.ToInt32(responseEncoded);
 
-            responseEncoded = new byte[len];
+            return len;
+        }
+
+        private static byte[] GetAvailableCMDs(Request req, TcpClient client)
+        {
+            NetworkStream nStream = client.GetStream();
+
+            nStream.Write(req.reqEncoded, 0, req.reqEncoded.Length);
+
+            int len = GetResponseSize(nStream);
+
+            byte[] responseEncoded = new byte[len];
             nStream.Read(responseEncoded, 0, responseEncoded.Length);
 
             nStream.Close();
@@ -198,16 +206,18 @@ namespace RadioTools
 
         private static byte[] CallCMD(Request req, byte[] contName, TcpClient client)
         {
-            NetworkStream nSteram = client.GetStream();
+            NetworkStream nStream = client.GetStream();
 
-            nSteram.Write(req.reqEncoded, 0, req.reqEncoded.Length);
+            nStream.Write(req.reqEncoded, 0, req.reqEncoded.Length);
 
-            nSteram.Write(contName, 0, contName.Length);
+            nStream.Write(contName, 0, contName.Length);
 
-            byte[] responseEncoded = new byte[Settings.dat.responseSize];
-            nSteram.Read(responseEncoded, 0, responseEncoded.Length);
+            int len = GetResponseSize(nStream);            
 
-            nSteram.Close();
+            byte[] responseEncoded = new byte[len];
+            nStream.Read(responseEncoded, 0, responseEncoded.Length);
+
+            nStream.Close();
 
             return responseEncoded;
         }

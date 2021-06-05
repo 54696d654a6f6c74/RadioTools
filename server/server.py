@@ -21,7 +21,6 @@ def log(message):
 writer = open("HOST", 'w')
 local_ip = socket.gethostbyname(socket.gethostname())
 if "127." in local_ip:
-    print(local_ip)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.connect(("192.168.0.1", 69))
     local_ip = sock.getsockname()[0]
@@ -52,7 +51,7 @@ def load_commands():
     all_commands = listdir(CMD_PATH)
 
 
-def send_big_packet(target, packet):
+def send_big_packet(target, packet: bytearray):
     packet_len = len(packet)
     packet_size = packet_len.to_bytes(int(def_bytesize / 8), byte_order)
 
@@ -72,16 +71,16 @@ def create_command_file(data: str, name: str):
     chmod(path, stat.S_IRWXU)
 
 
-def call_command(cmd: str) -> str:
+def call_command(cmd: str) -> bytearray:
     cmd = cmd.rstrip('\x00')
     path = CMD_PATH + "/" + cmd + ".sh"
 
     result = run(["sh", path], capture_output=True)
 
     if result.stderr != b'':
-        return (result.stdout + result.stderr).decode()
+        return (result.stdout + result.stderr)
     else:
-        return result.stdout.decode()
+        return result.stdout
 
 
 def create_command_request(conn):
@@ -109,9 +108,9 @@ def call_command_request(conn):
     with conn:
         cmd = conn.recv(def_bytesize)
         out = call_command(cmd.decode())
-        log(out)
 
-        conn.sendall(b'K')
+        send_big_packet(conn, out)
+        log(out.decode())
 
 
 log("Starting server on: " + HOST + ":" + str(PORT))
