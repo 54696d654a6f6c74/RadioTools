@@ -12,7 +12,7 @@ byte_order = "little"  # littledian
 
 
 def log(message):
-    logfile = open("LOG", 'w')
+    logfile = open("LOG", "a+")
     print(message)
     logfile.write(message + "\n")
     logfile.close()
